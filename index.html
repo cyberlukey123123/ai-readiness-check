@@ -1363,13 +1363,13 @@
             document.body.style.overflow = '';
         }
 
-        function submitLead() {
+        async function submitLead() {
             // Validate form
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
             const email = document.getElementById('email').value.trim();
             const company = document.getElementById('company').value.trim();
-            
+
             if (!firstName || !lastName || !email || !company) {
                 alert('Please fill in all required fields');
                 return;
@@ -1378,25 +1378,46 @@
             // Get score for the lead data
             const { categoryScores, totalScore } = calculateScores();
 
-            // Log lead data (in production, send to your CRM/webhook)
-            console.log('Lead captured:', {
-                firstName,
-                lastName,
-                email,
-                company,
-                employees: document.getElementById('employees').value,
-                industry: document.getElementById('industry').value,
-                notes: document.getElementById('notes').value,
+            // Prepare form data
+            const formData = {
+                access_key: "1ad1c73a-e8b9-4fe6-aedb-9cc1813d7dcf",
+                subject: `New AI Readiness Check Lead - ${company}`,
+                from_name: `${firstName} ${lastName}`,
+                email: email,
+                company: company,
+                employees: document.getElementById('employees').value || 'Not specified',
+                industry: document.getElementById('industry').value || 'Not specified',
+                notes: document.getElementById('notes').value || 'None',
                 score: totalScore,
                 aiPlanning: aiPlanningContext,
-                categoryScores,
+                categoryScores: JSON.stringify(categoryScores, null, 2),
                 timestamp: new Date().toISOString()
-            });
+            };
 
-            // Close form modal, show thank you
-            closeModal();
-            document.getElementById('finalScoreReminder').textContent = totalScore;
-            document.getElementById('thankYouModal').classList.add('active');
+            try {
+                const response = await fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Close form modal, show thank you
+                    closeModal();
+                    document.getElementById('finalScoreReminder').textContent = totalScore;
+                    document.getElementById('thankYouModal').classList.add('active');
+                } else {
+                    alert('There was an error submitting your request. Please try again.');
+                    console.error('Form submission error:', result);
+                }
+            } catch (error) {
+                alert('There was an error submitting your request. Please try again.');
+                console.error('Form submission error:', error);
+            }
         }
 
         function calculateScores() {
