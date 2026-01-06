@@ -1378,19 +1378,25 @@
             // Get score for the lead data
             const { categoryScores, totalScore } = calculateScores();
 
+            // Format category scores for email
+            let categoryBreakdown = '';
+            for (const [category, data] of Object.entries(categoryScores)) {
+                categoryBreakdown += `${category}: ${data.score}/${data.max} (${data.percentage}%)\n`;
+            }
+
             // Prepare form data
             const formData = {
                 access_key: "1ad1c73a-e8b9-4fe6-aedb-9cc1813d7dcf",
-                subject: `New AI Readiness Check Lead - ${company}`,
+                subject: `New AI Readiness Check Lead - ${company} (Score: ${totalScore}/100)`,
                 from_name: `${firstName} ${lastName}`,
                 email: email,
                 company: company,
                 employees: document.getElementById('employees').value || 'Not specified',
                 industry: document.getElementById('industry').value || 'Not specified',
                 notes: document.getElementById('notes').value || 'None',
-                score: totalScore,
-                aiPlanning: aiPlanningContext,
-                categoryScores: JSON.stringify(categoryScores, null, 2),
+                total_score: `${totalScore}/100`,
+                category_breakdown: categoryBreakdown,
+                ai_planning: aiPlanningContext,
                 timestamp: new Date().toISOString()
             };
 
